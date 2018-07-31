@@ -1,0 +1,219 @@
+package com.client;
+
+import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+/**
+ * 聊天界面
+ * @author Administrator
+ */
+public class Chatframe extends JFrame implements ActionListener,KeyListener{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private Client client;
+	private JButton jbt_exit;
+	private JButton jbt_clear;
+	private JButton jbt_tran;
+	private JTextField jtf_mess;
+	private JTextArea jta_mess;
+	private JList jlt_user;
+	private JScrollPane jsp_mess;
+	private JScrollPane jsp_user;
+	
+	
+	public Chatframe(String username, Client client) {
+		this.client = client;
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (InstantiationException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IllegalAccessException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (UnsupportedLookAndFeelException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		this.setTitle("QACQ聊天室"+"  "+username);
+		this.setIconImage(Toolkit.getDefaultToolkit().createImage(Client.class.getResource("chat.png")));
+		this.setLayout(null);
+		this.setResizable(false);
+		this.setSize(450, 325);
+		this.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				jbt_exit.doClick();
+			}
+		});
+		
+		jsp_mess = new JScrollPane();
+		jsp_mess.setBorder(BorderFactory.createTitledBorder("聊天消息"));
+		jsp_mess.setBounds(10, 10, 283, 167);
+		jsp_mess.setWheelScrollingEnabled(true);//添加滚动条
+		this.add(jsp_mess);
+		jta_mess = new JTextArea();
+		jta_mess.setEditable(false);
+		jsp_mess.setViewportView(jta_mess);
+//		jsp_mess.setOpaque(false);  
+//		jsp_mess.getViewport().setOpaque(false);  
+		
+		//输入框
+		jtf_mess = new JTextField();
+		jtf_mess.setBounds(10, 242, 192, 32);
+		jtf_mess.addKeyListener(this);
+		this.add(jtf_mess);
+		
+		//发送按钮
+		jbt_tran = new JButton("发送");
+		jbt_tran.setFont(new Font("宋体",Font.PLAIN,14));
+		jbt_tran.addActionListener(this);
+		jbt_tran.addKeyListener(this);
+		jbt_tran.setBounds(212, 241, 93, 32);
+		this.add(jbt_tran);
+		
+		//清除消息按钮
+		jbt_clear = new JButton("清除消息");
+		jbt_clear.setFont(new Font("宋体",Font.PLAIN,14));
+		jbt_clear.addActionListener(this);
+		jbt_clear.setBounds(158, 187, 135, 37);
+		this.add(jbt_clear);
+		
+		//退出聊天室按钮
+		jbt_exit = new JButton("退出聊天室");
+		jbt_exit.setFont(new Font("宋体",Font.PLAIN,14));
+		jbt_exit.setBounds(20, 189, 128, 37);
+		jbt_exit.addActionListener(this);
+		this.add(jbt_exit);
+		
+		//右边显示在线用户
+		jsp_user = new JScrollPane();
+		jsp_user.setBorder(BorderFactory.createTitledBorder("在线用户"));
+		jsp_user.setBounds(303, 10, 128, 214);
+		this.add(jsp_user);
+		jlt_user = new JList();
+		//jlt_user.setVisibleRowCount(4);
+		jsp_user.setViewportView(jlt_user);
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_ENTER) {//如果事件源是回车的话
+			jbt_tran.doClick();
+		}
+	}
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == jbt_clear) {
+			jta_mess.setText("");
+		}
+		
+		if (e.getSource() == jbt_exit) {
+			int flag = JOptionPane.showConfirmDialog(this, "确定要退出聊天室吗?",
+					"提示",JOptionPane.OK_CANCEL_OPTION);
+			if (flag == JOptionPane.OK_OPTION) {
+				this.setVisible(false);
+				client.exitChat();
+			}
+		}
+		
+		if (e.getSource() == jbt_tran) {
+			String mess = jtf_mess.getText().trim();
+			jtf_mess.setText("");
+			if (mess.equals("")) {
+				JOptionPane.showMessageDialog(this, "不能发送空消息");
+			}else {
+				client.tran(mess);
+			}
+		}
+	}
+	//在聊天界面显示在线用户
+	public void setDisUser(String chat_re) {
+		String[] infos = chat_re.split("@userlist");
+		String[] info = new String[infos.length / 2];
+		for (int i = 1; i < infos.length; i++) {
+			int id_user = 0;
+			try {
+				id_user = Integer.parseInt(infos[i]);//获取线程ID
+				if (client.threadId == id_user) {
+					if (!client.username.equals(infos[i - 1])) {
+						JOptionPane.showMessageDialog(this,
+								"由于有同名的用户登录，所以在您的用户名后面加上了线程id");
+						client.username = infos[i - 1];
+						this.setTitle("聊天室    " + client.username);
+						break;
+					} else {
+						break;
+					}
+				} else {
+					i++;
+				}
+			} 
+			catch (Exception e) {
+				
+			}
+		}
+		int j = 0;
+		for (int i = 0; i < infos.length; i++) {
+			if (client.username.equals(infos[i])) {
+				i++;
+				continue;
+			}
+			info[j++] = infos[i++];
+		}
+		jlt_user.removeAll();
+		jlt_user.setListData(info);
+	}
+	
+	//将聊天信息显示在聊天界面
+	public void setDisMess(String chat_re) {
+		int local = chat_re.indexOf("@chat");
+		jta_mess.append(chat_re.substring(0, local) + "\n");
+		jta_mess.setCaretPosition(jta_mess.getText().length());
+	}
+	
+	
+	public void closeClient() {//服务器关闭时在来聊天界面给的提示
+		JOptionPane.showMessageDialog(this, "服务器已经关闭！","提示",JOptionPane.OK_OPTION);
+		client.exitClient();
+		this.setVisible(false);
+	}
+
+}

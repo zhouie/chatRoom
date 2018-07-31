@@ -1,0 +1,149 @@
+package com.client;
+
+import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
+/**
+ * 登录界面
+ * @author Administrator
+ */
+public class StartFrame extends JFrame implements ActionListener{
+
+	private Client client;
+	private JLabel jbl_userName ;
+	private JLabel jbl_hostIp;
+	private JLabel jbl_hostPost;
+	private JTextField jtf_userName;
+	private JTextField jtf_hostIp;
+	private JTextField jtf_hostPost;
+	private JButton jbt_exit;
+	private JButton jbt_enter;
+	
+	
+	
+	/**
+	 * 构造方法  初始化登录界面
+	 * @param client
+	 */
+	public StartFrame(Client client) {
+		this.client = client;
+		
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (InstantiationException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IllegalAccessException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (UnsupportedLookAndFeelException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		this.setSize(300, 250);
+		this.setTitle("QACQ聊天室");
+		this.setIconImage(Toolkit.getDefaultToolkit().createImage(StartFrame.class.getResource("start.png")));
+		this.setLayout(null);
+		this.setResizable(false);
+		this.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				jbt_exit.doClick();
+			}
+		});
+		
+		jbl_userName = new JLabel("用户名");
+		jbl_userName.setFont(new Font("宋体",Font.PLAIN,14));
+		jbl_userName.setBounds(23, 30, 81, 34);
+		this.add(jbl_userName);
+		
+		jtf_userName = new JTextField();
+		jtf_userName.setBounds(114,30,143,30);
+		this.add(jtf_userName);
+		
+		jbl_hostIp = new JLabel("服务器地址");
+		jbl_hostIp.setFont(new Font("宋体",Font.PLAIN,14));
+		jbl_hostIp.setBounds(23, 74, 81, 34);
+		this.add(jbl_hostIp);
+		
+		jtf_hostIp = new JTextField();
+		jtf_hostIp.setBounds(114,74,143,30);
+		this.add(jtf_hostIp);
+		try {
+			String ip = Inet4Address.getLocalHost().getHostAddress();
+			jtf_hostIp.setText(ip);
+		} catch (UnknownHostException e1) {
+			e1.printStackTrace();
+		}
+		
+		jbl_hostPost = new JLabel("端口号");
+		jbl_hostPost.setFont(new Font("宋体",Font.PLAIN,14));
+		jbl_hostPost.setBounds(23, 118, 81, 34);
+		this.add(jbl_hostPost);
+		
+		jtf_hostPost = new JTextField();
+		jtf_hostPost.setBounds(114,118,143,30);
+		this.add(jtf_hostPost);
+		jtf_hostPost.setText("5000");
+		
+		jbt_exit = new JButton("退出聊天室");
+		jbt_exit.addActionListener(this);
+		jbt_exit.setBounds(144, 162, 113, 39);
+		jbt_exit.setFont(new Font("宋体",Font.PLAIN,14));
+		this.add(jbt_exit);
+		
+		jbt_enter = new JButton("进入聊天室");
+		jbt_enter.setFont(new Font("宋体",Font.PLAIN,14));
+		jbt_enter.setBounds(23, 162, 108, 39);
+		jbt_enter.addActionListener(this);
+		this.add(jbt_enter);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == jbt_exit) {
+			this.setVisible(false);	//关闭这个启动界面
+			client.exitLogin();
+		}
+		if (e.getSource() == jbt_enter) {
+			String username = jtf_userName.getText().trim();
+			String hostIp = jtf_hostIp.getText().trim();
+			String hostPost = jtf_hostPost.getText().trim();
+			if (!username.equals("")) {
+				if (!hostIp.equals("")) {
+					if (!hostPost.equals("")) {
+						String result = null;
+						result = client.login(username,hostIp,hostPost);
+						if (result.equals("true")) {//验证通过
+							client.showChatframe();
+							this.setVisible(false);
+						}else {
+							JOptionPane.showMessageDialog(this, result);
+						}
+					}else {
+						JOptionPane.showMessageDialog(this, "端口号不能为空");
+					}
+				}else {
+					JOptionPane.showMessageDialog(this, "服务器地址ip不能为空");
+				}
+			}else {
+				JOptionPane.showMessageDialog(this, "用户名不能为空");
+			}
+		}
+	}
+}
